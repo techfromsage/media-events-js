@@ -37,6 +37,9 @@ The code within the repo includes an example video page (index.html), tests to s
 called videoAnalytics.js. The videoAnalytics.js file includes logic to define when certain events have
 been triggered. It has been designed to be separate from echo & tn so that it is easily testable.
 
+My one concern about this approach is related to the assumption of how often a time update is triggered.
+This might differ depending on how powerful the device is & browser.
+
 ## Events
 Scrub Event: `{"start":3891.264,"end":9314.182999999999,"name":"forward","type":"scrub"}`
  * start: When the scrubbing started
