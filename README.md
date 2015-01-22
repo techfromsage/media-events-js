@@ -1,13 +1,17 @@
+## Terminology
+ * index - the video is split into multiple parts (starts at 0). Each part has a length defined by the interval
+ * interval - length of a index in milliseconds (currently 10 seconds long)
+ * scrub - event that is triggered when a user either clicks somewhere on the video timeline or clicks and drags
+ * tick - event that describes the amount of time spent within a index (maximum amount is the interval length)
+
 ## What are we trying to record for the video analytics?
- * Record what has been watched within a certain index
-   * Example index 0 had 10 seconds watched, index 1 had 10 seconds watched, etc
-   * Intervals are currently set to 10 seconds
- * When the video was paused
- * Where seek events happened
+ * Record how much time has been spent within a index
+   * Example index 0 had 10 seconds watched, index 1 had 2 seconds watched, etc
+ * When the video was paused (record the time)
+ * Where seek events happened (record the difference between where the user seeked from to their destination)
  * Premature ticks (caused by seek/pause events)
-   * Example: index 0 watched for 2 seconds, then a seek, then index 2 watched for 10 seconds
+   * Example: index 0 watched for 2 seconds, then a seek for 18 seconds, then index 2 watched for 10 seconds
    * Generated when either a seek or pause event happens
-   * The pause/seek event then records where the timeline carried on playing from
 
 ## Problem seen in live
 The video analytics are being revamped due to the original implementation using timers to generate 
@@ -28,14 +32,14 @@ the seek flag, but not the pause indicator.
 
 ## Proposal for a new fix
 After discovering this world of pain and talking to Justin about my woes, it was suggested by Justin
-to only monitor the trending of time changes within the video. It is not quite possible to ignore all 
+to only monitor the trending of time changes within the video. It is not possible to ignore all 
 other events as the paused and ended events need to be taken into consideration (no time update events
-are created during these occasions). It is possible to see when seeking happens as the time update events
-are generated every < 300ms.
+are created during these occasions). It is possible to see when a user seeked as the time update events
+are generated every < 300ms and there would be a larger gap between the updates.
 
 The code within the repo includes an example video page (index.html), tests to save my sanity & a file
 called videoAnalytics.js. The videoAnalytics.js file includes logic to define when certain events have
-been triggered. It has been designed to be separate from echo & tn so that it is easily testable.
+been triggered. It has been designed to be separate from echo & tn so that it is easy to test.
 
 My one concern about this approach is related to the assumption of how often a time update is triggered.
 This might differ depending on how powerful the device is & browser.
