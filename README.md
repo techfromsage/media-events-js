@@ -11,7 +11,7 @@
  * Where seek events happened (record the difference between where the user seeked from to their destination)
  * Premature ticks (caused by seek/pause events)
    * Example: index 0 watched for 2 seconds, then a seek for 18 seconds, then index 2 watched for 10 seconds
-   * Generated when either a seek or pause event happens
+   * Generated when either a seek or pause event is triggered as the user will not potentially spend the maximum amount of time within the index (the user could pause then close the tab)
 
 ## Problem seen in live
 The video analytics are being revamped due to the original implementation using timers to generate 
