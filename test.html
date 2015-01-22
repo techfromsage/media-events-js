@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.17.1.css">
+  <script src="http://code.jquery.com/qunit/qunit-1.17.1.js"></script>
+  <script src="videoAnalytics.js"></script>
+ 
+  <script>
+  QUnit.test("tick until 10 seconds", function( assert ) {
+    var timeTracker = new VideoAnalytics();
+
+    for(x = 0; x < 10000; x += 200) {
+        assert.equal(timeTracker.tick(x), null); 
+    }
+
+    var results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("tick just after 10 seconds", function(assert) {
+    var timeTracker = new VideoAnalytics();
+
+    for(x = 0; x < 10000; x += 200) {
+        assert.equal(timeTracker.tick(x), null); 
+    }
+
+    var results = timeTracker.tick(10100);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("tick to 30 seconds", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    var results = Array();
+
+    for(x = 0; x <= 30000; x += 200) {
+        var result = timeTracker.tick(x); 
+        if(result !== null) {
+            console.info(result);
+            results = results.concat(result);
+            console.info(results);
+        }
+    }
+
+    assert.equal(results.length, 3);
+
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+
+    assert.equal(results[1].start, 10000);
+    assert.equal(results[1].end, 20000);
+    assert.equal(results[1].name, 'tick');
+    assert.equal(results[1].premature, false);
+
+    assert.equal(results[2].start, 20000);
+    assert.equal(results[2].end, 30000);
+    assert.equal(results[2].name, 'tick');
+    assert.equal(results[2].premature, false);
+  });
+
+  QUnit.test("seek forwards", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    assert.equal(timeTracker.tick(200), null);
+
+    var results = timeTracker.tick(10500);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 200);
+    assert.equal(results[0].end, 10500);
+    assert.equal(results[0].name, 'forward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 0);
+    assert.equal(results[1].end, 200);
+    assert.equal(results[1].name, 'forward');    
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+  });
+
+  QUnit.test("seek forwards, then tick", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    assert.equal(timeTracker.tick(200), null);
+
+    var results = timeTracker.tick(19800);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 200);
+    assert.equal(results[0].end, 19800);
+    assert.equal(results[0].name, 'forward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 0);
+    assert.equal(results[1].end, 200);
+    assert.equal(results[1].name, 'forward');    
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+
+    results = timeTracker.tick(20000);
+    assert.equal(results.length, 1);
+
+    assert.equal(results[0].start, 19800);
+    assert.equal(results[0].end, 20000);
+    assert.equal(results[0].name, 'tick');    
+    assert.equal(results[0].type, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("seek backwards", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    for(x = 200; x <= 9800; x+= 200) {
+        assert.equal(timeTracker.tick(x), null);
+    }
+
+    var results = timeTracker.tick(0);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 9800);
+    assert.equal(results[0].end, 0);
+    assert.equal(results[0].name, 'backward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 0);
+    assert.equal(results[1].end, 9800);
+    assert.equal(results[1].name, 'backward');
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+  });
+
+  QUnit.test("seek forwards, then backwards & allow a tick", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    assert.equal(timeTracker.tick(200), null);
+
+    var results = timeTracker.tick(10500);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 200);
+    assert.equal(results[0].end, 10500);
+    assert.equal(results[0].name, 'forward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 0);
+    assert.equal(results[1].end, 200);
+    assert.equal(results[1].name, 'forward');    
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+
+    assert.equal(timeTracker.tick(10600), null);
+
+    var results = timeTracker.tick(0);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 10600);
+    assert.equal(results[0].end, 0);
+    assert.equal(results[0].name, 'backward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 10500);
+    assert.equal(results[1].end, 10600);
+    assert.equal(results[1].name, 'backward');    
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+   
+    for(x = 200; x <= 9800; x+= 200) {
+        assert.equal(timeTracker.tick(x), null);
+    }
+ 
+    var results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("seek forwards then hit a tick", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    assert.equal(timeTracker.tick(200), null);
+
+    var results = timeTracker.tick(10500);
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 200);
+    assert.equal(results[0].end, 10500);
+    assert.equal(results[0].name, 'forward');
+    assert.equal(results[0].type, 'scrub');
+
+    assert.equal(results[1].start, 0);
+    assert.equal(results[1].end, 200);
+    assert.equal(results[1].name, 'forward');    
+    assert.equal(results[1].type, 'tick');
+    assert.equal(results[1].premature, true);
+
+    timeTracker.tick(10600);
+    for(x = 10600; x <= 19800; x+= 200) {
+        assert.equal(timeTracker.tick(x), null);
+    }
+
+    var results = timeTracker.tick(20000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 10500);
+    assert.equal(results[0].end, 20000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("modified tolerences", function(assert) {
+    assert.equal("", "");
+  });
+
+  QUnit.test("non zero start time", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    timeTracker.setStartTime(2000);
+
+    for(x = 2000; x < 10000; x += 200) {
+        assert.equal(timeTracker.tick(x), null); 
+    }
+
+    var results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 2000);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+
+  QUnit.test("pause", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    timeTracker.tick(200);
+
+    var results = timeTracker.pause();
+    assert.equal(results.length, 2);
+
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 200);
+    assert.equal(results[0].name, 'pause');
+    assert.equal(results[0].type, 'tick');
+ 
+    assert.equal(results[1].time, 200);
+    assert.equal(results[1].name, 'paused');
+    assert.equal(results[1].type, 'pause');
+
+    for(x = 400; x < 10000; x+= 200) {
+        timeTracker.tick(x);
+    }
+
+    results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+
+    assert.equal(results[0].start, 200);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);  
+  });
+
+  QUnit.test("end of stream", function(assert) {
+    var timeTracker = new VideoAnalytics();
+    timeTracker.tick(200);
+    var results = timeTracker.end(400);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 400);
+    assert.equal(results[0].name, 'end');
+    assert.equal(results[0].type, 'tick');
+  });
+
+  QUnit.test("end of stream, then restart", function(assert) {
+    var timeTracker = new VideoAnalytics();
+
+    for(x = 200; x < 10000; x+= 200) {
+        timeTracker.tick(x);
+    }
+
+    var results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+
+    results = timeTracker.end(10200);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 10000);
+    assert.equal(results[0].end, 10200);
+    assert.equal(results[0].name, 'end');
+    assert.equal(results[0].type, 'tick');
+
+    assert.equal(timeTracker.tick(150), null);
+ 
+    for(x = 200; x < 10000; x+= 200) {
+        timeTracker.tick(x);
+    }
+
+    var results = timeTracker.tick(10000);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].start, 0);
+    assert.equal(results[0].end, 10000);
+    assert.equal(results[0].name, 'tick');
+    assert.equal(results[0].premature, false);
+  });
+  </script>
+</head>
+<body>
+    <div id="qunit"></div>
+</body>
+</html>
