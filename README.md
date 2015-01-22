@@ -1,7 +1,7 @@
 ## Terminology
  * index - the video is split into multiple parts (starts at 0). Each part has a length defined by the interval
  * interval - length of a index in milliseconds (currently 10 seconds long)
- * scrub - event that is triggered when a user either clicks somewhere on the video timeline or clicks and drags
+ * seek - event that is triggered when a user either clicks somewhere on the video timeline or clicks and drags
  * tick - event that describes the amount of time spent within a index (maximum amount is the interval length)
 
 ## What data do we need for the video analytics?
@@ -26,7 +26,7 @@ used the video events to create analytic events without the use of timers. As wi
 that are spread across multiple browsers issues exist. The timing and order of the events are different
 when using different browsers. One example of this problem is where chrome will update the current
 time before triggering a seeking event. Safari on the other hand will trigger a seeking event then time  
-update. Another example is where chrome will pause the video while scrubbing, but will only set the
+update. Another example is where chrome will pause the video while seeking, but will only set the
 seeking flag while the mouse is moving along the video timeline. Safari on the other hand will set
 the seek flag, but not the pause indicator.
 
@@ -45,9 +45,9 @@ My one concern about this approach is related to the assumption of how often a t
 This might differ depending on how powerful the device is & browser.
 
 ## Events
-Scrub Event: `{"start":3891.264,"end":9314.182999999999,"name":"forward","type":"scrub"}`
- * start: When the scrubbing started
- * end: Where the scrubbing ended
+Seeking Event: `{"start":3891.264,"end":9314.182999999999,"name":"forward","type":"scrub"}`
+ * start: When the seeking started
+ * end: Where the seeking ended
  * name: Descriptor
  * type: Type of event
 
