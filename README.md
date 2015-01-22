@@ -45,7 +45,7 @@ My one concern about this approach is related to the assumption of how often a t
 This might differ depending on how powerful the device is & browser.
 
 ## Events
-Seeking Event: `{"start":3891.264,"end":9314.182999999999,"name":"forward","type":"scrub"}`
+Seeking Event: `{"start":3891.264,"end":9314.182999999999,"name":"forward","type":"seek"}`
  * start: When the seeking started
  * end: Where the seeking ended
  * name: Descriptor
@@ -69,7 +69,7 @@ All of the events that would be used to create echo events are outputted using c
 
 ```
 {"start":0,"end":10000,"name":"tick","type":"tick","premature":false}
-{"start":12691.157000000001,"end":20701.316,"name":"forward","type":"scrub"}
+{"start":12691.157000000001,"end":20701.316,"name":"forward","type":"seek"}
 {"start":10000,"end":12691.157000000001,"name":"forward","type":"tick","premature":true}
 {"start":20701.316,"end":26753.861,"name":"pause","type":"tick","premature":true}
 {"time":26753.861,"type":"pause","name":"paused"} 

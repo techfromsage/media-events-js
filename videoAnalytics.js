@@ -32,7 +32,7 @@ VideoAnalytics.prototype.tick = function(time) {
             start: this.lastKnownTime,
             end: time,
             name: 'forward',
-            type: 'scrub'
+            type: 'seek'
         });
 
         if(this.playedFrom !== this.lastKnownTime) {
@@ -53,7 +53,7 @@ VideoAnalytics.prototype.tick = function(time) {
             start: this.lastKnownTime,
             end: time,
             name: 'backward',
-            type: 'scrub'
+            type: 'seek'
         });
 
         if(this.playedFrom !== this.lastKnownTime) {
