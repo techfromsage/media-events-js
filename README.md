@@ -4,7 +4,7 @@
  * scrub - event that is triggered when a user either clicks somewhere on the video timeline or clicks and drags
  * tick - event that describes the amount of time spent within a index (maximum amount is the interval length)
 
-## What are we trying to record for the video analytics?
+## What data do we need for the video analytics?
  * Record how much time has been spent within a index
    * Example index 0 had 10 seconds watched, index 1 had 2 seconds watched, etc
  * When the video was paused (record the time)
