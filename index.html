@@ -11,9 +11,7 @@
         </video>
         <script>
             var media = document.getElementById('video');
-            var timeTracker = new VideoAnalytics();
-
-            function flushEvent(tickEvents) {
+            var timeTracker = new VideoAnalytics(media, function(tickEvents) {
                 if(Array.isArray(tickEvents) === false) {
                     return;
                 }
@@ -21,24 +19,8 @@
                 for(x = 0; x < tickEvents.length; x++) {
                     console.info(JSON.stringify(tickEvents[x]));
                 }
-            }
-
-            media.addEventListener("timeupdate", function() {
-                if(!media.paused && !media.seeking) {
-                    flushEvent(timeTracker.tick(media.currentTime * 1000));
-                }
             });
 
-            media.addEventListener("pause", function() {
-                if(media.ended !== true && media.seeking !== true) {
-                    flushEvent(timeTracker.pause());
-                }
-            });
-
-            media.addEventListener("ended", function() {
-                flushEvent(timeTracker.end(media.currentTime * 1000));
-                //timeTracker = new VideoAnalytics();
-            });
         </script>
     </body>
 </html>

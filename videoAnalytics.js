@@ -1,4 +1,6 @@
-function VideoAnalytics() {
+function VideoAnalytics(videoElement, flushEvent) {
+    videoAnalytics = this;
+
     this.intervalLength = 10000;
     this.lastKnownTime = 0;
     this.playedFrom = 0;
@@ -7,6 +9,22 @@ function VideoAnalytics() {
     this.backwardsSeekTolerence = -300;
     this.restartingTolerence = 300;
     this.endTime = -1;
+    
+    videoElement.addEventListener("timeupdate", function() {
+        if(!videoElement.paused && !videoElement.seeking) {
+            flushEvent(videoAnalytics.tick(videoElement.currentTime * 1000));
+        }
+    });
+
+    videoElement.addEventListener("pause", function() {
+        if(videoElement.ended !== true && videoElement.seeking !== true) {
+            flushEvent(videoAnalytics.pause());
+        }
+    });
+
+    videoElement.addEventListener("ended", function() {
+        flushEvent(videoAnalytics.end(videoElement.currentTime * 1000));
+    });
 }
 
 VideoAnalytics.prototype.setStartTime = function(startTime) {
