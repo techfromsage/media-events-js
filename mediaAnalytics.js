@@ -2,6 +2,8 @@ function MediaAnalytics(mediaElement, flushEventFn) {
     var self = this;
 
     this.intervalLength = 10000;
+    this.timeTolerance = 1000;
+
     this.lastKnownPlaybackTime = 0;
     this.lastKnownTime = 0;
     this.playedFrom = 0;
@@ -70,7 +72,7 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
         // restarting the stream
         this.expectedInterval = this.intervalLength;
         this.playedFrom = 0;
-    } else if (difference > 50) {
+    } else if (difference > this.timeTolerence) {
         if (playbackDiff > 0) {
             // seeked forward 
             this.flushEventFn({
