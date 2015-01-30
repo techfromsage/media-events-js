@@ -1,5 +1,5 @@
-function VideoAnalytics(videoElement, flushEvent) {
-    videoAnalytics = this;
+function MediaAnalytics(mediaElement, flushEventFn) {
+    var self = this;
 
     this.intervalLength = 10000;
     this.lastKnownPlaybackTime = 0;
@@ -9,35 +9,37 @@ function VideoAnalytics(videoElement, flushEvent) {
     this.endTime = -1;
     this.hasEnded = true;
     this.hasStarted =false;
+    this.flushEventFn = flushEventFn;
  
-    videoElement.addEventListener("play", function() {
-       if(videoAnalytics.hasEnded === true) {
-           videoAnalytics.hasEnded = false;
-           videoAnalytics.hasStarted = true;
-           if(videoElement.currentTime * 1000 < videoAnalytics.intervalLength) {
-               flushEvent(videoAnalytics.play());
+    mediaElement.addEventListener("play", function() {
+       if(self.hasEnded === true) {
+           self.hasEnded = false;
+           self.hasStarted = true;
+
+           if(mediaElement.currentTime * 1000 < self.intervalLength) {
+               self.play();
            }
        }
     });    
 
-    videoElement.addEventListener("timeupdate", function() {
-        if(!videoElement.paused && !videoElement.seeking) {
-            flushEvent(videoAnalytics.tick(videoElement.currentTime * 1000));
+    mediaElement.addEventListener("timeupdate", function() {
+        if(!mediaElement.paused && !mediaElement.seeking) {
+            self.timeupdate(mediaElement.currentTime * 1000);
         }
     });
 
-    videoElement.addEventListener("pause", function() {
-        if(videoElement.ended !== true && videoElement.seeking !== true) {
-            flushEvent(videoAnalytics.pause());
+    mediaElement.addEventListener("pause", function() {
+        if(mediaElement.ended !== true && mediaElement.seeking !== true) {
+            self.pause();
         }
     });
 
-    videoElement.addEventListener("ended", function() {
-        flushEvent(videoAnalytics.end(videoElement.currentTime * 1000));
+    mediaElement.addEventListener("ended", function() {
+        self.end(mediaElement.currentTime * 1000);
     });
 }
 
-VideoAnalytics.prototype.setStartTime = function(startTime) {
+MediaAnalytics.prototype.setStartTime = function(startTime) {
     if(this.lastKnownPlaybackTime !== 0 || this.playedFrom !== 0) {
         throw 'Cannot set start time after starting';
     }
@@ -46,16 +48,15 @@ VideoAnalytics.prototype.setStartTime = function(startTime) {
     this.playedFrom = startTime;
 }
 
-VideoAnalytics.prototype.play = function() {
+MediaAnalytics.prototype.play = function() {
     this.lastKnownTime = (new Date).getTime();
     return new Array({type: 'view'});
 }
 
-VideoAnalytics.prototype.tick = function(playbackTime) {
+MediaAnalytics.prototype.timeupdate = function(playbackTime) {
     var currentTime = (new Date).getTime();
     var playbackDiff = playbackTime - this.lastKnownPlaybackTime;
     var timeDiff = currentTime - this.lastKnownTime;
-    var tickEvents = Array();
 
     if (playbackDiff > timeDiff) {
         var difference = playbackDiff - timeDiff;
@@ -72,21 +73,23 @@ VideoAnalytics.prototype.tick = function(playbackTime) {
     } else if (difference > 50) {
         if (playbackDiff > 0) {
             // seeked forward 
-            tickEvents.push({
+            this.flushEventFn({
                 start: this.lastKnownPlaybackTime,
                 end: playbackTime,
-                name: 'forward',
-                type: 'seek'
+                desc: 'forward seek',
+                type: 'seek',
+                difference: difference
             });
     
             if (this.playedFrom !== this.lastKnownPlaybackTime) {
-                tickEvents.push({
+                this.flushEventFn({
                     start: this.playedFrom, 
                     end: this.lastKnownPlaybackTime,
                     index: this.expectedInterval,
-                    name: 'forward',
-                    type: 'tick',
-                    premature: true
+                    desc: 'forward seek',
+                    type: 'segment',
+                    premature: true,
+                    difference: difference
                 });
             }
     
@@ -94,21 +97,23 @@ VideoAnalytics.prototype.tick = function(playbackTime) {
             this.playedFrom = playbackTime;
         } else if (playbackDiff < 0) {
             // seeked backwards
-            tickEvents.push({
+            this.flushEventFn({
                 start: this.lastKnownPlaybackTime,
                 end: playbackTime,
-                name: 'backward',
-                type: 'seek'
+                desc: 'backward seek',
+                type: 'seek',
+                difference: difference
             });
     
             if (this.playedFrom !== this.lastKnownPlaybackTime) {
-                tickEvents.push({
+                this.flushEventFn({
                     start: this.playedFrom, 
                     end: this.lastKnownPlaybackTime,
                     index: this.expectedInterval,
-                    name: 'backward',
+                    desc: 'backward seek',
                     type: 'tick',
-                    premature: true
+                    premature: true, 
+                    difference: difference
                 });
             }
     
@@ -117,13 +122,12 @@ VideoAnalytics.prototype.tick = function(playbackTime) {
         }
     } else if (playbackTime >= this.expectedInterval) {
         // general tick over the index bounderies
-
-        tickEvents.push({
+        this.flushEventFn({
             start: this.playedFrom, 
             end: this.expectedInterval, 
             index: this.expectedInterval,
-            name: 'tick',
-            type: 'tick',
+            name: 'segment completed',
+            type: 'segment',
             premature: false
         });
 
@@ -133,41 +137,38 @@ VideoAnalytics.prototype.tick = function(playbackTime) {
  
     this.lastKnownTime = currentTime;
     this.lastKnownPlaybackTime = playbackTime;
-    if (tickEvents.length > 0) {
-        return tickEvents;
-    }
-
-    return null;
 }
 
-VideoAnalytics.prototype.pause = function() {
-    var events = Array({
+MediaAnalytics.prototype.pause = function() {
+    this.flushEventFn({
         start: this.playedFrom, 
         end: this.lastKnownPlaybackTime,
         index: this.expectedInterval,
-        name: 'pause',
-        type: 'tick',
+        desc: 'pause',
+        type: 'segment',
         premature: true
-    }, {
+    });
+
+    this.flushEventFn({
         time: this.lastKnownPlaybackTime,
+        desc: 'paused',
         type: 'pause',
-        name: 'paused'
     });
 
     this.playedFrom = this.lastKnownPlaybackTime;
     return events;
 }
 
-VideoAnalytics.prototype.end = function(playbackTime) {
+MediaAnalytics.prototype.end = function(playbackTime) {
     this.endTime = playbackTime;
     this.lastKnownPlaybackTime = playbackTime;
 
-    return Array({
+    this.flushEventFn({
         start: this.playedFrom, 
         end: playbackTime,
         index: playbackTime,
-        name: 'end',
-        type: 'tick',
+        desc: 'stream ended',
+        type: 'segment',
         premature: true
     });
 }

@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <script src="videoAnalytics.js"></script>
+        <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    </head>
+    <body>
+        <video id="audio" controls preload="none" mediagroup="myVideoGroup" poster="https://www.grc.com/image/SteveAndLeoAsPicardAndRiker.png">
+            <source id="mp3" type="audio/mp3" src="https://media.grc.com/sn/sn-492.mp3" />
+            <p>Your user agent does not support the HTML5 Video element.</p>
+        </video>
+        <table>
+            <thead>
+                <tr>
+                    <th>start</th>
+                    <th>end</th>
+                    <th>index</th>
+                    <th>name</th>
+                    <th>type</th>
+                    <th>premature</th>
+                    <th>difference</th>
+                </tr>
+            </thead>
+            <tbody id="eventsData"></tbody>
+        </table>
+        <script>
+            var media = document.getElementById('audio');
+            var tableRows = new Array();
+
+            var timeTracker = new MediaAnalytics(media, function(mediaEvent) {
+                console.info(JSON.stringify(mediaEvent));
+
+                var row = $('<tr></tr>');
+                row.append($('<td></td>').text(mediaEvent.start));
+                row.append($('<td></td>').text(mediaEvent.end));
+                row.append($('<td></td>').text(mediaEvent.index));
+                row.append($('<td></td>').text(mediaEvent.name));
+                row.append($('<td></td>').text(mediaEvent.type));
+                row.append($('<td></td>').text(mediaEvent.premature));
+                row.append($('<td></td>').text(mediaEvent.difference));
+ 
+                $('#eventsData').append(row);
+            });
+        </script>
+    </body>
+</html>
