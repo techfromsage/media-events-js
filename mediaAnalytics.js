@@ -52,7 +52,7 @@ MediaAnalytics.prototype.setStartTime = function(startTime) {
 
 MediaAnalytics.prototype.play = function() {
     this.lastKnownTime = (new Date).getTime();
-    return new Array({type: 'view'});
+    this.flushEventFn({type: 'view'});
 }
 
 MediaAnalytics.prototype.timeupdate = function(playbackTime) {
@@ -66,19 +66,17 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
         var difference = timeDiff - playbackDiff;
     }
 
-    console.info({ difference : difference });
-
     if (this.endTime === this.lastKnownPlaybackTime && playbackTime <= this.intervalLength) {
         // restarting the stream
         this.expectedInterval = this.intervalLength;
         this.playedFrom = 0;
-    } else if (difference > this.timeTolerence) {
+    } else if (difference > this.timeTolerance) {
         if (playbackDiff > 0) {
             // seeked forward 
             this.flushEventFn({
                 start: this.lastKnownPlaybackTime,
                 end: playbackTime,
-                desc: 'forward seek',
+                desc: 'forward seek amount',
                 type: 'seek',
                 difference: difference
             });
@@ -87,7 +85,7 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
                 this.flushEventFn({
                     start: this.playedFrom, 
                     end: this.lastKnownPlaybackTime,
-                    index: this.expectedInterval,
+                    index: this.expectedInterval - this.intervalLength,
                     desc: 'forward seek',
                     type: 'segment',
                     premature: true,
@@ -102,7 +100,7 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
             this.flushEventFn({
                 start: this.lastKnownPlaybackTime,
                 end: playbackTime,
-                desc: 'backward seek',
+                desc: 'backward seek amount',
                 type: 'seek',
                 difference: difference
             });
@@ -111,9 +109,9 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
                 this.flushEventFn({
                     start: this.playedFrom, 
                     end: this.lastKnownPlaybackTime,
-                    index: this.expectedInterval,
+                    index: this.expectedInterval - this.intervalLength,
                     desc: 'backward seek',
-                    type: 'tick',
+                    type: 'segment',
                     premature: true, 
                     difference: difference
                 });
@@ -123,12 +121,12 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
             this.playedFrom = playbackTime;
         }
     } else if (playbackTime >= this.expectedInterval) {
-        // general tick over the index bounderies
+        // segment has been completed
         this.flushEventFn({
             start: this.playedFrom, 
             end: this.expectedInterval, 
-            index: this.expectedInterval,
-            name: 'segment completed',
+            index: this.expectedInterval - this.intervalLength,
+            desc: 'segment completed',
             type: 'segment',
             premature: false
         });
@@ -145,7 +143,7 @@ MediaAnalytics.prototype.pause = function() {
     this.flushEventFn({
         start: this.playedFrom, 
         end: this.lastKnownPlaybackTime,
-        index: this.expectedInterval,
+        index: this.expectedInterval - this.intervalLength,
         desc: 'pause',
         type: 'segment',
         premature: true
@@ -158,7 +156,6 @@ MediaAnalytics.prototype.pause = function() {
     });
 
     this.playedFrom = this.lastKnownPlaybackTime;
-    return events;
 }
 
 MediaAnalytics.prototype.end = function(playbackTime) {
@@ -168,7 +165,7 @@ MediaAnalytics.prototype.end = function(playbackTime) {
     this.flushEventFn({
         start: this.playedFrom, 
         end: playbackTime,
-        index: playbackTime,
+        index: this.expectedInterval - this.intervalLength,
         desc: 'stream ended',
         type: 'segment',
         premature: true
