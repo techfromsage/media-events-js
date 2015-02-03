@@ -5,38 +5,37 @@ function MediaAnalytics(mediaElement, flushEventFn) {
     this.timeTolerance = 1000;
 
     this.lastKnownPlaybackTime = 0;
-    this.lastKnownTime = 0;
+    this.lastKnownTime = -1;
     this.playedFrom = 0;
     this.expectedInterval = this.intervalLength;
     this.endTime = -1;
     this.hasEnded = true;
-    this.hasStarted =false;
+    this.hasStarted = false;
     this.flushEventFn = flushEventFn;
  
     mediaElement.addEventListener("loadeddata", function() {
-        
-        self.play();
+        //
+
     });
 
     mediaElement.addEventListener("play", function() {
-       if(self.hasEnded === true) {
+       if (self.hasEnded === true) {
            self.hasEnded = false;
            self.hasStarted = true;
 
-           //if(mediaElement.currentTime * 1000 < self.intervalLength) {
-           //    self.play();
-           //}
+           self.play();
+           console.info('started: ' + self.lastKnownTime);
        }
     });    
 
     mediaElement.addEventListener("timeupdate", function() {
-        if(!mediaElement.paused && !mediaElement.seeking) {
+        if (!mediaElement.paused && !mediaElement.seeking) {
             self.timeupdate(mediaElement.currentTime * 1000);
         }
     });
 
     mediaElement.addEventListener("pause", function() {
-        if(mediaElement.ended !== true && mediaElement.seeking !== true) {
+        if (mediaElement.ended !== true && mediaElement.seeking !== true) {
             self.pause();
         }
     });
@@ -47,7 +46,7 @@ function MediaAnalytics(mediaElement, flushEventFn) {
 }
 
 MediaAnalytics.prototype.setStartTime = function(startTime) {
-    if(this.lastKnownPlaybackTime !== 0 || this.playedFrom !== 0) {
+    if (this.lastKnownPlaybackTime !== 0 || this.playedFrom !== 0) {
         throw 'Cannot set start time after starting';
     }
 
@@ -76,8 +75,8 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
     if (this.endTime === this.lastKnownPlaybackTime && playbackTime <= this.intervalLength) {
         // restarting the stream
         this.expectedInterval = this.intervalLength;
-        this.playedFrom = 0;
-    } else if (hasSeeked && playbackDiff > 0) {
+        this.playedFrom = 0;                     
+    } else if (hasSeeked && playbackDiff > 0 && !(playbackTime - this.lastKnownPlaybackTime < 1000)) {
         // seeked forward 
         this.flushEventFn({
             start: this.lastKnownPlaybackTime,
@@ -87,19 +86,21 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
             difference: difference
         });
 
-        this.flushEventFn({
-            start: this.playedFrom, 
-            end: this.lastKnownPlaybackTime,
-            index: this.expectedInterval - this.intervalLength,
-            desc: 'forward seek',
-            type: 'segment',
-            premature: true,
-            difference: difference
-        });
+        if (this.playedFrom > 0 || this.lastKnownPlaybackTime > 0) {
+            this.flushEventFn({
+                start: this.playedFrom, 
+                end: this.lastKnownPlaybackTime,
+                index: this.expectedInterval - this.intervalLength,
+                desc: 'forward seek',
+                type: 'segment',
+                premature: true,
+                difference: difference
+            });
+        }
 
         this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
         this.playedFrom = playbackTime;
-    } else if (hasSeeked && playbackDiff < 0) {
+    } else if (hasSeeked && playbackDiff < 0 && !(this.lastKnownPlaybackTime - playbackTime < 1000)) {
         // seeked backwards
         this.flushEventFn({
             start: this.lastKnownPlaybackTime,
@@ -109,15 +110,17 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
             difference: difference
         });
 
-        this.flushEventFn({
-            start: this.playedFrom, 
-            end: this.lastKnownPlaybackTime,
-            index: this.expectedInterval - this.intervalLength,
-            desc: 'backward seek',
-            type: 'segment',
-            premature: true, 
-            difference: difference
-        });
+        if (this.playedFrom > 0 || this.lastKnownPlaybackTime > 0) {
+            this.flushEventFn({
+                start: this.playedFrom, 
+                end: this.lastKnownPlaybackTime,
+                index: this.expectedInterval - this.intervalLength,
+                desc: 'backward seek',
+                type: 'segment',
+                premature: true, 
+                difference: difference
+            });
+        }
 
         this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
         this.playedFrom = playbackTime;
