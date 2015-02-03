@@ -13,14 +13,19 @@ function MediaAnalytics(mediaElement, flushEventFn) {
     this.hasStarted =false;
     this.flushEventFn = flushEventFn;
  
+    mediaElement.addEventListener("loadeddata", function() {
+        
+        self.play();
+    });
+
     mediaElement.addEventListener("play", function() {
        if(self.hasEnded === true) {
            self.hasEnded = false;
            self.hasStarted = true;
 
-           if(mediaElement.currentTime * 1000 < self.intervalLength) {
-               self.play();
-           }
+           //if(mediaElement.currentTime * 1000 < self.intervalLength) {
+           //    self.play();
+           //}
        }
     });    
 
@@ -66,60 +71,56 @@ MediaAnalytics.prototype.timeupdate = function(playbackTime) {
         var difference = timeDiff - playbackDiff;
     }
 
+    var hasSeeked = difference > this.timeTolerance;
+
     if (this.endTime === this.lastKnownPlaybackTime && playbackTime <= this.intervalLength) {
         // restarting the stream
         this.expectedInterval = this.intervalLength;
         this.playedFrom = 0;
-    } else if (difference > this.timeTolerance) {
-        if (playbackDiff > 0) {
-            // seeked forward 
-            this.flushEventFn({
-                start: this.lastKnownPlaybackTime,
-                end: playbackTime,
-                desc: 'forward seek amount',
-                type: 'seek',
-                difference: difference
-            });
-    
-            if (this.playedFrom !== this.lastKnownPlaybackTime) {
-                this.flushEventFn({
-                    start: this.playedFrom, 
-                    end: this.lastKnownPlaybackTime,
-                    index: this.expectedInterval - this.intervalLength,
-                    desc: 'forward seek',
-                    type: 'segment',
-                    premature: true,
-                    difference: difference
-                });
-            }
-    
-            this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
-            this.playedFrom = playbackTime;
-        } else if (playbackDiff < 0) {
-            // seeked backwards
-            this.flushEventFn({
-                start: this.lastKnownPlaybackTime,
-                end: playbackTime,
-                desc: 'backward seek amount',
-                type: 'seek',
-                difference: difference
-            });
-    
-            if (this.playedFrom !== this.lastKnownPlaybackTime) {
-                this.flushEventFn({
-                    start: this.playedFrom, 
-                    end: this.lastKnownPlaybackTime,
-                    index: this.expectedInterval - this.intervalLength,
-                    desc: 'backward seek',
-                    type: 'segment',
-                    premature: true, 
-                    difference: difference
-                });
-            }
-    
-            this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
-            this.playedFrom = playbackTime;
-        }
+    } else if (hasSeeked && playbackDiff > 0) {
+        // seeked forward 
+        this.flushEventFn({
+            start: this.lastKnownPlaybackTime,
+            end: playbackTime,
+            desc: 'forward seek amount',
+            type: 'seek',
+            difference: difference
+        });
+
+        this.flushEventFn({
+            start: this.playedFrom, 
+            end: this.lastKnownPlaybackTime,
+            index: this.expectedInterval - this.intervalLength,
+            desc: 'forward seek',
+            type: 'segment',
+            premature: true,
+            difference: difference
+        });
+
+        this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
+        this.playedFrom = playbackTime;
+    } else if (hasSeeked && playbackDiff < 0) {
+        // seeked backwards
+        this.flushEventFn({
+            start: this.lastKnownPlaybackTime,
+            end: playbackTime,
+            desc: 'backward seek amount',
+            type: 'seek',
+            difference: difference
+        });
+
+        this.flushEventFn({
+            start: this.playedFrom, 
+            end: this.lastKnownPlaybackTime,
+            index: this.expectedInterval - this.intervalLength,
+            desc: 'backward seek',
+            type: 'segment',
+            premature: true, 
+            difference: difference
+        });
+
+        this.expectedInterval = (((playbackTime / this.intervalLength) | 0) + 1) * this.intervalLength;
+        this.playedFrom = playbackTime;
     } else if (playbackTime >= this.expectedInterval) {
         // segment has been completed
         this.flushEventFn({
