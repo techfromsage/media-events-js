@@ -341,10 +341,6 @@
             // TODO: iphone 4 takes ~ 2.5 seconds to update :S
             assert.ok(events[1].start < 4000);
 
-      var d = document.createElement('b');
-      d.innerHTML = events[1].start;
-      document.getElementsByTagName('body')[0].appendChild(d);
-
             assert.ok(events[1].end >= 10000);
             assert.ok(events[1].end < 10500);
             assert.equal(events[1].desc, 'forward seek amount');    
@@ -388,133 +384,224 @@
     video.play();
   });
 
-/*
-  QUnit.test("seek forwards then hit a tick", function(assert) {
-    var timeTracker = new MediaAnalytics();
-    assert.equal(timeTracker.timeupdate(200), null);
-
-    var results = timeTracker.timeupdate(10500);
-    assert.equal(results.length, 2);
-
-    assert.equal(results[0].start, 200);
-    assert.equal(results[0].end, 10500);
-    assert.equal(results[0].desc, 'forward');
-    assert.equal(results[0].type, 'seek');
-
-    assert.equal(results[1].start, 0);
-    assert.equal(results[1].end, 200);
-    assert.equal(results[1].desc, 'forward');    
-    assert.equal(results[1].type, 'segment');
-    assert.equal(results[1].premature, true);
-
-    timeTracker.timeupdate(10600);
-    for(x = 10600; x <= 19800; x+= 200) {
-        assert.equal(timeTracker.timeupdate(x), null);
-    }
-
-    var results = timeTracker.timeupdate(20000);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 10500);
-    assert.equal(results[0].end, 20000);
-    assert.equal(results[0].desc, 'segment');
-    assert.equal(results[0].premature, false);
-  });
-
+/*  // TODO: this is currently not required
   QUnit.test("modified tolerences", function(assert) {
     assert.equal("", "");
   });
+*/
 
   QUnit.test("non zero start time", function(assert) {
-    var timeTracker = new MediaAnalytics();
-    timeTracker.setStartTime(2000);
+    var events = new Array();
+    var video = getMediaAnalytics();
+    var done = assert.async();
+    var stage = 0;
 
-    for(x = 2000; x < 10000; x += 200) {
-        assert.equal(timeTracker.timeupdate(x), null); 
-    }
+    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+        console.info(JSON.stringify(mediaEvent));
+        events.push(mediaEvent);
+    });
 
-    var results = timeTracker.timeupdate(10000);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 2000);
-    assert.equal(results[0].end, 10000);
-    assert.equal(results[0].desc, 'segment');
-    assert.equal(results[0].premature, false);
+    console.info('non zero start time');
+    video.addEventListener('timeupdate', function() {
+        if (video.currentTime > 20 && stage === 0) {
+            assert.equal(events.length, 2);
+
+            assert.equal(events[0].type, 'view');
+    
+            assert.equal(events[1].start, 15000);
+            assert.equal(events[1].end, 20000);
+            assert.equal(events[1].desc, 'segment completed');
+            assert.equal(events[1].type, 'segment');
+            assert.equal(events[1].premature, false)
+            stage += 1;
+            done();
+        }
+    });
+
+    video.addEventListener('loadedmetadata', function() {
+        video.currentTime = 15;
+    });
+
+    mediaAnalytics.setStartTime(15000);
+    video.play();
   });
 
   QUnit.test("pause", function(assert) {
-    var timeTracker = new MediaAnalytics();
-    timeTracker.timeupdate(200);
+    var events = new Array();
+    var video = getMediaAnalytics();
+    var done = assert.async();
+    var stage = 0;
 
-    var results = timeTracker.pause();
-    assert.equal(results.length, 2);
+    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+        console.info(JSON.stringify(mediaEvent));
+        events.push(mediaEvent);
+    });
 
-    assert.equal(results[0].start, 0);
-    assert.equal(results[0].end, 200);
-    assert.equal(results[0].desc, 'pause');
-    assert.equal(results[0].type, 'segment');
+    var testTimeout = function() {
+        assert.equal(events.length, 2);
+        
+        assert.equal(events[0].start, 0);
+        assert.ok(events[0].end > 2000);
+        assert.ok(events[0].end < 3000);
+        assert.equal(events[0].desc, 'pause');
+        assert.equal(events[0].type, 'segment');
  
-    assert.equal(results[1].time, 200);
-    assert.equal(results[1].desc, 'paused');
-    assert.equal(results[1].type, 'pause');
+        assert.equal(events[1].time, events[0].end);
+        assert.equal(events[1].desc, 'paused');
+        assert.equal(events[1].type, 'pause');
+        events = new Array();
 
-    for(x = 400; x < 10000; x+= 200) {
-        timeTracker.timeupdate(x);
+        video.play();
     }
 
-    results = timeTracker.timeupdate(10000);
-    assert.equal(results.length, 1);
+    console.info('pause');
+    video.addEventListener('timeupdate', function() {
+        if (video.currentTime > 2 && stage === 0) {
+            assert.equal(events.length, 1);
+            assert.equal(events[0].type, 'view');
+            events = new Array();
+            stage += 1;
+            video.pause();
 
-    assert.equal(results[0].start, 200);
-    assert.equal(results[0].end, 10000);
-    assert.equal(results[0].desc, 'segment');
-    assert.equal(results[0].premature, false);  
+            setTimeout(testTimeout, 2000);
+        } else if(video.currentTime > 10 && stage === 1) {
+            assert.equal(events.length, 1);
+            assert.ok(events[0].start > 2000);
+            assert.ok(events[0].start < 3000);
+            assert.equal(events[0].end, 10000);
+            assert.equal(events[0].desc, 'segment completed');
+            assert.equal(events[0].premature, false);  
+            stage += 1;
+            done();
+        }
+    });
+
+    video.play();
   });
 
-  QUnit.test("end of stream", function(assert) {
-    var timeTracker = new MediaAnalytics();
-    timeTracker.timeupdate(200);
-    var results = timeTracker.end(400);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 0);
-    assert.equal(results[0].end, 400);
-    assert.equal(results[0].desc, 'end');
-    assert.equal(results[0].type, 'segment');
+  QUnit.test("eos end of stream", function(assert) {
+    var events = new Array();
+    var video = getMediaAnalytics();
+    var done = assert.async();
+    var stage = 0;
+
+    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+        console.info(JSON.stringify(mediaEvent));
+        events.push(mediaEvent);
+    });
+
+    var checkEnding = function() {
+        assert.equal(events.length, 3);
+
+        assert.ok(events[0].start < 11000);
+        assert.ok(events[0].end >= 51000);
+        assert.ok(events[0].end < 52000);
+        assert.equal(events[0].desc, 'forward seek amount');    
+        assert.equal(events[0].type, 'seek');
+
+        assert.equal(events[1].start, 10000);
+        assert.ok(events[1].end < 11000);
+        assert.equal(events[1].desc, 'forward seek');    
+        assert.equal(events[1].type, 'segment');
+        assert.equal(events[1].premature, true);
+
+        assert.equal(events[2].start, 51000);
+        assert.ok(events[2].end > 52000);
+        assert.ok(events[2].end < 52250);
+        assert.equal(events[2].desc, 'stream ended');
+        assert.equal(events[2].type, 'segment');
+        done();
+    }
+
+    console.info('end of stream');
+    video.addEventListener('timeupdate', function() {
+        if (video.currentTime > 10 && stage === 0) {
+            assert.equal(events.length, 2)
+            assert.equal(events[0].type, 'view');
+    
+            assert.equal(events[1].start, 0);
+            assert.equal(events[1].end, 10000);
+            assert.equal(events[1].desc, 'segment completed');
+            assert.equal(events[1].type, 'segment');
+            assert.equal(events[1].premature, false);
+            events = new Array();
+            stage += 1;
+
+            setTimeout(checkEnding, 3000);
+            video.currentTime = 51;
+        }
+    });
+
+    video.play();
   });
 
   QUnit.test("end of stream, then restart", function(assert) {
-    var timeTracker = new MediaAnalytics();
+    var events = new Array();
+    var video = getMediaAnalytics();
+    var done = assert.async();
+    var stage = 0;
 
-    for(x = 200; x < 10000; x+= 200) {
-        timeTracker.timeupdate(x);
+    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+        console.info(JSON.stringify(mediaEvent));
+        events.push(mediaEvent);
+    });
+
+    var checkEnding = function() {
+        assert.equal(events.length, 3);
+
+        assert.ok(events[0].start < 12000);
+        assert.ok(events[0].end >= 51000);
+        assert.ok(events[0].end < 52000);
+        assert.equal(events[0].desc, 'forward seek amount');    
+        assert.equal(events[0].type, 'seek');
+
+        assert.equal(events[1].start, 10000);
+        assert.ok(events[1].end < 12000);
+        assert.equal(events[1].desc, 'forward seek');    
+        assert.equal(events[1].type, 'segment');
+        assert.equal(events[1].premature, true);
+
+        assert.equal(events[2].start, 51000);
+        assert.ok(events[2].end > 52000);
+        assert.ok(events[2].end < 52250);
+        assert.equal(events[2].desc, 'stream ended');
+        assert.equal(events[2].type, 'segment');
+
+        events = new Array();
+        video.play()
     }
 
-    var results = timeTracker.timeupdate(10000);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 0);
-    assert.equal(results[0].end, 10000);
-    assert.equal(results[0].desc, 'segment');
-    assert.equal(results[0].premature, false);
+    console.info('end of stream, then restart');
+    video.addEventListener('timeupdate', function() {
+        if (video.currentTime > 11 && stage === 0) {
+            assert.equal(events.length, 2)
+            assert.equal(events[0].type, 'view');
+    
+            assert.equal(events[1].start, 0);
+            assert.equal(events[1].end, 10000);
+            assert.equal(events[1].desc, 'segment completed');
+            assert.equal(events[1].type, 'segment');
+            assert.equal(events[1].premature, false);
+            events = new Array();
+            stage += 1;
 
-    results = timeTracker.end(10200);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 10000);
-    assert.equal(results[0].end, 10200);
-    assert.equal(results[0].desc, 'end');
-    assert.equal(results[0].type, 'segment');
+            setTimeout(checkEnding, 3000);
+            video.currentTime = 51;
+        } else if (video.currentTime > 10 && video.currentTime < 11 && stage === 1) {
+            assert.equal(events.length, 1)
+    
+            assert.equal(events[0].start, 0);
+            assert.equal(events[0].end, 10000);
+            assert.equal(events[0].desc, 'segment completed');
+            assert.equal(events[0].type, 'segment');
+            assert.equal(events[0].premature, false);
+            stage += 1;
+            done();
+        }
+    });
 
-    assert.equal(timeTracker.timeupdate(150), null);
- 
-    for(x = 200; x < 10000; x+= 200) {
-        timeTracker.timeupdate(x);
-    }
-
-    var results = timeTracker.timeupdate(10000);
-    assert.equal(results.length, 1);
-    assert.equal(results[0].start, 0);
-    assert.equal(results[0].end, 10000);
-    assert.equal(results[0].desc, 'segment');
-    assert.equal(results[0].premature, false);
+    video.play();
   });
-*/
   </script>
 </head>
 <body>

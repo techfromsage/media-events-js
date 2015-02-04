@@ -52,6 +52,7 @@ MediaAnalytics.prototype.setStartTime = function(startTime) {
 
     this.lastKnownPlaybackTime = startTime;
     this.playedFrom = startTime;
+    this.expectedInterval = (((startTime / this.intervalLength) | 0) + 1) * this.intervalLength;
 }
 
 MediaAnalytics.prototype.play = function() {
