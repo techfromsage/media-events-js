@@ -505,9 +505,10 @@
         assert.equal(events[1].type, 'segment');
         assert.equal(events[1].premature, true);
 
-        assert.equal(events[2].start, 51000);
+        assert.ok(events[2].start >= 51000);
+        assert.ok(events[2].start < 51500);
         assert.ok(events[2].end > 52000);
-        assert.ok(events[2].end < 52250);
+        assert.ok(events[2].end < 53000);
         assert.equal(events[2].desc, 'stream ended');
         assert.equal(events[2].type, 'segment');
         done();
@@ -561,9 +562,10 @@
         assert.equal(events[1].type, 'segment');
         assert.equal(events[1].premature, true);
 
-        assert.equal(events[2].start, 51000);
+        assert.ok(events[2].start >= 51000);
+        assert.ok(events[2].start < 51500);
         assert.ok(events[2].end > 52000);
-        assert.ok(events[2].end < 52250);
+        assert.ok(events[2].end < 53000);
         assert.equal(events[2].desc, 'stream ended');
         assert.equal(events[2].type, 'segment');
 
