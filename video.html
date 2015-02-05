@@ -1,6 +1,6 @@
 <html>
     <head>
-        <script src="mediaAnalytics.js"></script>
+        <script src="mediaEvents.js"></script>
         <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
     </head>
     <body>
@@ -28,7 +28,7 @@
             var media = document.getElementById('video');
             var tableRows = new Array();
 
-            var timeTracker = new MediaAnalytics(media, function(mediaEvent) {
+            var timeTracker = new talis.media.MediaEvents(media, function(mediaEvent) {
                 console.info(JSON.stringify(mediaEvent));
 
                 var row = $('<tr></tr>');

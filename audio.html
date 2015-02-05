@@ -1,13 +1,13 @@
 <html>
     <head>
-        <script src="mediaAnalytics.js"></script>
+        <script src="mediaEvents.js"></script>
         <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
     </head>
     <body>
-        <video id="audio" controls preload="none" mediagroup="myVideoGroup" poster="https://www.grc.com/image/SteveAndLeoAsPicardAndRiker.png">
+        <audio id="audio" controls preload="none" mediagroup="myVideoGroup" poster="https://www.grc.com/image/SteveAndLeoAsPicardAndRiker.png">
             <source id="mp3" type="audio/mp3" src="https://media.grc.com/sn/sn-492.mp3" />
             <p>Your user agent does not support the HTML5 Video element.</p>
-        </video>
+        </audio>
         <table>
             <thead>
                 <tr>
@@ -26,7 +26,7 @@
             var media = document.getElementById('audio');
             var tableRows = new Array();
 
-            var timeTracker = new MediaAnalytics(media, function(mediaEvent) {
+            var timeTracker = new talis.media.MediaEvents(media, function(mediaEvent) {
                 console.info(JSON.stringify(mediaEvent));
 
                 var row = $('<tr></tr>');

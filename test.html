@@ -7,10 +7,10 @@
   <script src="mediaAnalytics.js"></script>
  
   <script>
-  var _video;
+  var _video = null;
 
   var removeMediaAnalytics = function() {
-     if (_video) {
+     if (typeof _video !== 'undefined' && _video !== null) {
          _video.pause();
 
          var videoElements = document.getElementsByTagName('video');
@@ -528,7 +528,7 @@
             events = new Array();
             stage += 1;
 
-            setTimeout(checkEnding, 3000);
+            setTimeout(checkEnding, 4000);
             video.currentTime = 51;
         }
     });
@@ -587,7 +587,7 @@
             events = new Array();
             stage += 1;
 
-            setTimeout(checkEnding, 3000);
+            setTimeout(checkEnding, 5000);
             video.currentTime = 51;
         } else if (video.currentTime > 10 && video.currentTime < 11 && stage === 1) {
             assert.equal(events.length, 1)
