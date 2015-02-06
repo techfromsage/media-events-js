@@ -36,10 +36,10 @@ A segment of the media has been consumed
 {"start":0,"end":10000,"desc":"segment completed","type":"segment","premature":false}
 ```
 
-#### Premature Segment Event: 
+#### Premature Segment Event
 The segment was not totally consumed by the user. This is caused by pauses, seeks or the end of the stream.
 ``` JavaScript
-{"start":0,"end":10000,"desc":"segment completed","type":"segment","premature":false}
+{"start":20100,"end":30000,"desc":"segment completed","type":"segment","premature":true}
 ```
 
 #### Pause Event
