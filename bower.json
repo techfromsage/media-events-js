@@ -1,0 +1,18 @@
+{
+  "name": "MediaEvents",
+  "version": "0.0.1",
+  "homepage": "https://github.com/talis/linear-video-analytics-spike",
+  "authors": [
+    "Mark Wallsgrove <mw@talis.com>"
+  ],
+  "description": "Wrapper for the video/audio HTML5 elements to provide a consistent set events across all browsers",
+  "main": "mediaEvents.js",
+  "keywords": [
+    "media",
+    "event",
+    "video",
+    "audio",
+    "timeline"
+  ],
+  "license": "MIT"
+}

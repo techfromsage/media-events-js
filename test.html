@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.17.1.css">
   <script src="http://code.jquery.com/qunit/qunit-1.17.1.js"></script>
-  <script src="mediaAnalytics.js"></script>
+  <script src="mediaEvents.js"></script>
  
   <script>
   var _video = null;
 
-  var removeMediaAnalytics = function() {
+  var removeMediaEvents = function() {
      if (typeof _video !== 'undefined' && _video !== null) {
          _video.pause();
 
@@ -23,8 +23,8 @@
      }
   }
 
-  var getMediaAnalytics = function() { 
-      removeMediaAnalytics();
+  var getMediaEvents = function() { 
+      removeMediaEvents();
 
       var d = document.createElement('div');
       d.innerHTML = '<video controls="controls" webkit-playsinline>'+
@@ -59,16 +59,16 @@
   }
 
   QUnit.testDone(function() {
-      removeMediaAnalytics();     
+      removeMediaEvents();     
   });
 
   QUnit.test("tick until 10 seconds", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -94,11 +94,11 @@
 
   QUnit.test("tick just after 10 seconds", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -124,11 +124,11 @@
 
   QUnit.test("tick to 30 seconds", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -167,11 +167,11 @@
 
   QUnit.test("seek forwards", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(events));
         events.push(mediaEvent);
     });
@@ -217,11 +217,11 @@
 
   QUnit.test("seek forwards, then tick", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -275,11 +275,11 @@
 
   QUnit.test("seek backwards", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -318,11 +318,11 @@
 
   QUnit.test("seek forwards, then backwards & allow a tick", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -392,11 +392,11 @@
 
   QUnit.test("non zero start time", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -428,11 +428,11 @@
 
   QUnit.test("pause", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -481,11 +481,11 @@
 
   QUnit.test("eos end of stream", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
@@ -538,11 +538,11 @@
 
   QUnit.test("end of stream, then restart", function(assert) {
     var events = new Array();
-    var video = getMediaAnalytics();
+    var video = getMediaEvents();
     var done = assert.async();
     var stage = 0;
 
-    var mediaAnalytics = new MediaAnalytics(video, function(mediaEvent) {
+    var mediaAnalytics = new talis.media.MediaEvents(video, function(mediaEvent) {
         console.info(JSON.stringify(mediaEvent));
         events.push(mediaEvent);
     });
