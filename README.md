@@ -1,6 +1,6 @@
 MediaEvents wraps around either a video or audio element to provide a consistent set of events to track a user's interaction.
 
-```
+``` JavaScript
   var media = document.getElementById('video');
   var timeTracker = new talis.media.MediaEvents(media, function(mediaEvent) { 
     console.info(JSON.stringify(mediaEvent));
@@ -15,7 +15,7 @@ MediaEvents wraps around either a video or audio element to provide a consistent
 ## Events
 #### View Event
 The user started to consume the media
-```
+``` JavaScript
 {"type":"view"}
 ```
 
@@ -23,7 +23,7 @@ The user started to consume the media
 Triggered when the user seeks across the timeline
   * start: When the seeking started
   * end: Where the seeking ended
-```
+``` JavaScript
 {"start":3891.264,"end":9314.182999999999,"desc":"forward","type":"seek"}
 ```
 
@@ -32,27 +32,27 @@ A segment of the media has been consumed
   * start: Where the playback started within a index
   * end: Where the playback ended within a index
   * premature: If the tick finished at the end of a index or whether a seek/pause triggered the tick
-```
+``` JavaScript
 {"start":0,"end":10000,"desc":"segment completed","type":"segment","premature":false}
 ```
 
 #### Premature Segment Event: 
 The segment was not totally consumed by the user. This is caused by pauses, seeks or the end of the stream.
-```
+``` JavaScript
 {"start":0,"end":10000,"desc":"segment completed","type":"segment","premature":false}
 ```
 
 #### Pause Event
 The user paused the media
   * time: When the pause event happened
-```
+``` JavaScript
 {"time":1262.166,"type":"pause","desc":"paused"}
 ```
 
 ## Demo & testing
 Checkout this code and open testVideo.html or testAudio.html in your browser. If you want to execute the tests open test.html. These tests can be executed on >=IE10, FF, Chrome, Safari (macosx), IOS, Android & Windows Mobile
 
-```
+``` JavaScript
 {"start":0,"end":10000,"index":0,"desc":"segment completed","type":"segment","premature":false}
 {"start":12485.648,"end":3977.1,"desc":"backward seek amount","type":"seek","difference":8686.547999999999}
 {"start":10000,"end":12485.648,"index":10000,"desc":"backward seek","type":"segment","premature":true,"difference":8686.547999999999}
