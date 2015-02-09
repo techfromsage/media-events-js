@@ -12,8 +12,8 @@ Each browser independitly implements the W3 specification for video and audio el
 majority of the browsers trigger the media events in a different order, causing the user of the API to 
 compensate with complicated code. 
 
-The solution to this problem is to only track the `timeupdate` events and consistenly report the events
-back to the user of the API.
+The solution to this problem is to only track the `timeupdate` events and consistently report the events
+back to the user.
 
 ## Terminology
 * segment - the media is split into multiple parts (starts at 0). Each part has a length defined by the interval
