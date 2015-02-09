@@ -10,10 +10,14 @@ MediaEvents wraps around either a video or audio element to provide a consistent
 ## What is this project attempting to solve?
 Each browser independitly implements the W3 specification for video and audio elements. Inevitably the
 majority of the browsers trigger the media events in a different order, causing the user of the API to 
-compensate with complicated code. 
+compensate with complicated code. The specification also states that the `timeupdate` event should occur
+once every 15 to 250ms, but in reality a struggling device will trigger a update event in 1 second intervals. Many seeking and pause events will also be recieved by the user's code which might not be expected (seeking/pause/playing user actions can cause seeking & pause events to be triggered, which is inconsistent across the different implementations).
 
 The solution to this problem is to only track the `timeupdate` events and consistently report the events
-back to the user.
+back to the user. It is possible to accuratly track changes within media's timeline by comparing the
+amount of real time that has past vs the amount of time that has past within the playback. A tolerance has
+been added to ignore any seeking events that are less than a second as some of the browsers seek after a
+change (pause, play, buffering, etc).
 
 ## Terminology
 * segment - the media is split into multiple parts (starts at 0). Each part has a length defined by the interval
