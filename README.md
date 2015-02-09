@@ -7,7 +7,7 @@ MediaEvents wraps around either a video or audio element to provide a consistent
   });
 ```
 
-## What is the project attempting to solve?
+## What is this project attempting to solve?
 Each browser independitly implements the W3 specification for video and audio elements. Inevitably the
 majority of the browsers trigger the media events in a different order, causing the user of the API to 
 compensate with complicated code. 
