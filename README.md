@@ -33,6 +33,7 @@ These tests can be executed on >=IE10, FF, Chrome, Safari (macosx), IOS, Android
 {"start":3977.1,"end":5289.361000000001,"index":0,"desc":"forward seek","type":"segment","premature":true,"difference":11948.669999999998}
 {"start":17540.031,"end":19175.274,"index":10000,"desc":"pause","type":"segment","premature":true}
 {"time":19175.274,"desc":"paused","type":"pause"}
+```
 
 ## Events
 #### View Event
