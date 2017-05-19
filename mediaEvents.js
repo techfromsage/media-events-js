@@ -85,7 +85,7 @@ var MediaEvents = (function () {
                 this.expectedInterval = this.intervalLength;
                 this.playedFrom = 0;
             } else if (hasSeeked && playbackDiff > 0 && playbackTime - this.lastKnownPlaybackTime >= 1000) {
-                // seeked forward 
+                // seeked forward
                 this.flushEventFn({
                     start: this.lastKnownPlaybackTime,
                     end: playbackTime,
@@ -179,6 +179,11 @@ var MediaEvents = (function () {
                 type: 'segment',
                 premature: true
             });
+
+            // Reset state at end of video
+            this.lastKnownPlaybackTime = 0;
+            this.lastKnownTime = -1;
+            this.playedFrom = 0;
         }
     };
 
