@@ -169,8 +169,6 @@ var MediaEvents = (function () {
             this.playedFrom = this.lastKnownPlaybackTime;
         },
         end: function () {
-            this.lastKnownPlaybackTime = this.endTime;
-
             this.flushEventFn({
                 start: this.playedFrom,
                 end: this.endTime,
